@@ -153,6 +153,7 @@ void granularOMP(Mat Ptr_src,Mat Ptr_dst,int capas, int threads){
 
 int main(int argc, char *argv[]) {
     //declaramos argumentos de entradas
+    MPI_Init(&argc, &argv);
     char* nombre_src;
     nombre_src = (char*)malloc(sizeof(char)*20);
     char* nombre_dst;
@@ -252,6 +253,7 @@ int main(int argc, char *argv[]) {
         default:
             break;
     }
+    MPI_Finalize();
     //Guardamos la imagen
     imwrite(nombre_dst,image_dst);
     free(nombre_dst);
