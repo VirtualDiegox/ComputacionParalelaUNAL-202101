@@ -1,3 +1,5 @@
+//sudo mpic++ image-effects-mpi.cpp -o filtros_mpi -fopenmp `pkg-config --cflags --libs opencv4`
+//sudo mpirun --allow-run-as-root -np 1 --host 10.128.0.3 ./filtros_mpi 4K.jpg 4K_withfilter1.jpg 1 2
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <iostream>
@@ -12,29 +14,28 @@
 using namespace std;
 using namespace cv;
 
-void grisPromedioOMP(Mat Ptr_src,Mat Ptr_dst, int threads){
+void grisPromedioOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int imagePartialSize){
 
-    uint8_t* pixelPtr_src = (uint8_t*)Ptr_src.data; //Puntero imagen original
-    uint8_t* pixelPtr_dst = (uint8_t*)Ptr_dst.data; //Puntero imagen destino
-    int cn = Ptr_src.channels();//Numero de canales
+    uint8_t* pixelPtr_src = (uint8_t*)partialBuffer; //Puntero imagen original
+    //Puntero imagen destino
+    
+    
 
-    int width = Ptr_src.rows;
-    int height = Ptr_dst.cols;
     omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(threads) collapse(2)
-	for(int i = 0; i <= width; i++){
+    #pragma omp parallel for num_threads(threads)
+	for(int i = 0; i < imagePartialSize; i+=3){
 	    
-        for(int j = 0; j < height; j++){
-            uint8_t pixel[cn];
+            uint8_t pixel[3];
             //obtenemos valores RGB de la imagen
-            pixel[0] = (uint8_t)pixelPtr_src[i*height*cn + j*cn + 0]; // B
-            pixel[1] = (uint8_t)pixelPtr_src[i*height*cn + j*cn + 1]; // G
-            pixel[2] = (uint8_t)pixelPtr_src[i*height*cn + j*cn + 2]; // R
+            pixel[0] = (uint8_t)pixelPtr_src[i]; // B
+            pixel[1] = (uint8_t)pixelPtr_src[i+1]; // G
+            pixel[2] = (uint8_t)pixelPtr_src[i+2]; // R
             //hacemos la logica del filtro con los valores RGB
             uint8_t Grey = (pixel[0]+pixel[1]+pixel[2])/3;
+            //printf("Grey:%d i:%d\n", Grey,i);
             //asignamos el valor calculado al unico canal de la imagen a crear
-            pixelPtr_dst[i * height + j] = Grey;
-        }
+            ansBuffer[i/3] = (uchar)Grey;
+        
     } 
 }
 
@@ -153,7 +154,10 @@ void granularOMP(Mat Ptr_src,Mat Ptr_dst,int capas, int threads){
 
 int main(int argc, char *argv[]) {
     //declaramos argumentos de entradas
-    MPI_Init(&argc, &argv);
+    int numprocs, processId;
+    
+
+
     char* nombre_src;
     nombre_src = (char*)malloc(sizeof(char)*20);
     char* nombre_dst;
@@ -170,32 +174,65 @@ int main(int argc, char *argv[]) {
         hilos = stoi(argv[4]);
     }
 
+    Mat imagen_src;
+    //Declaramos objeto sobre el cual se trabajara la imagen a crear
+    Mat image_dst;
+    size_t imageTotalSize;
+    size_t imagePartialSize;
+    size_t image_dstPartialSize;
+    uchar* partialBuffer;
+    uchar* ansBuffer;
 
-
-
-    //declaramos variable para tomar el tiempo
-	struct timeval* tval_before,* tval_after,* tval_result;
-    tval_before = (struct timeval*)malloc(sizeof(struct timeval));
-    tval_after = (struct timeval*)malloc(sizeof(struct timeval));
-    tval_result = (struct timeval*)malloc(sizeof(struct timeval));
-
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+	MPI_Comm_rank(MPI_COMM_WORLD, &processId);
+        //declaramos variable para tomar el tiempo
+        struct timeval* tval_before,* tval_after,* tval_result;
+        tval_before = (struct timeval*)malloc(sizeof(struct timeval));
+        tval_after = (struct timeval*)malloc(sizeof(struct timeval));
+        tval_result = (struct timeval*)malloc(sizeof(struct timeval));
+    if (processId==0){
+        
     
-    
-    //Leemos la imagen
-    Mat imagen_src = imread(nombre_src);
-    free(nombre_src);
-    //Advertimos si no se encuentra la imagen
-    if( imagen_src.empty() ){
-        printf(" Error opening image\n");
-        return -1;
+        //Leemos la imagen
+        imagen_src = imread(nombre_src);
+        free(nombre_src);
+        //Advertimos si no se encuentra la imagen
+        if( imagen_src.empty() ){
+            printf(" Error opening image\n");
+            return -1;
+        }
+        Mat imagen(imagen_src.rows, imagen_src.cols,CV_8UC1, Scalar(0));
+        image_dst = imagen;
+        
+
+        
+
+        imageTotalSize = imagen_src.step[0] * imagen_src.rows;
+        
+        imagePartialSize = imageTotalSize / numprocs;
+
+        image_dstPartialSize = image_dst.step[0] * image_dst.rows /numprocs; 
+        printf("ps:%ld\nps_dst:%ld\n",imagePartialSize,image_dstPartialSize);
+        
     }
 
-    //Declaramos objeto sobre el cual se trabajara la imagen a crear
-    Mat image_dst(imagen_src.rows, imagen_src.cols,CV_8UC1, Scalar(0));
+    MPI_Bcast( &imagePartialSize, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD );
+    MPI_Bcast( &image_dstPartialSize, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD );
+    
+    MPI_Barrier( MPI_COMM_WORLD );
 
-    int height = imagen_src.rows;
-    int width = imagen_src.cols;
-    int rc;
+    partialBuffer = new uchar[imagePartialSize];
+    ansBuffer = new uchar[image_dstPartialSize];
+
+    MPI_Barrier( MPI_COMM_WORLD );
+
+    MPI_Scatter( imagen_src.data, imagePartialSize, MPI_UNSIGNED_CHAR, partialBuffer, imagePartialSize, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD );
+    MPI_Barrier( MPI_COMM_WORLD );
+    MPI_Scatter( image_dst.data, image_dstPartialSize, MPI_UNSIGNED_CHAR, ansBuffer, image_dstPartialSize, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD );
+
+
+   
 
     switch (parametro_filtro){
         //filtro grisPromedio
@@ -203,13 +240,13 @@ int main(int argc, char *argv[]) {
             
             //OMP
             
-            gettimeofday(tval_before, NULL);
-            grisPromedioOMP(imagen_src,image_dst,hilos);
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            if (processId == 0) gettimeofday(tval_before, NULL);
+            grisPromedioOMP(partialBuffer,hilos,ansBuffer,imagePartialSize);
+            if (processId == 0) gettimeofday(tval_after, NULL);
+            if (processId == 0)timersub(tval_after, tval_before, tval_result);
+            if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
             
-            
+            MPI_Barrier( MPI_COMM_WORLD );
             
             
             break;
@@ -218,44 +255,56 @@ int main(int argc, char *argv[]) {
             
             //OMP
             
-            gettimeofday(tval_before, NULL);
-            grisLumaOMP(imagen_src,image_dst,hilos);
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
-            
+            if (processId == 0)gettimeofday(tval_before, NULL);
+            //grisLumaOMP(imagen_src,image_dst,hilos);
+            if (processId == 0)gettimeofday(tval_after, NULL);
+            if (processId == 0)timersub(tval_after, tval_before, tval_result);
+            if (processId == 0)printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            MPI_Barrier( MPI_COMM_WORLD );
             break;
         //filtro sombrasDeGris
         case 3:
         
             //OMP
             
-            gettimeofday(tval_before, NULL);
-            sombrasDeGrisOMP(imagen_src,image_dst,capas,hilos);
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
-            
+            if (processId == 0)gettimeofday(tval_before, NULL);
+            //sombrasDeGrisOMP(imagen_src,image_dst,capas,hilos);
+            if (processId == 0)gettimeofday(tval_after, NULL);
+            if (processId == 0)timersub(tval_after, tval_before, tval_result);
+            if (processId == 0)printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            MPI_Barrier( MPI_COMM_WORLD );
             break;
         //filtro granular
         case 4:
             
             //OMP
             
-            gettimeofday(tval_before, NULL);
-            granularOMP(imagen_src,image_dst,capas,hilos);
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
-            
+            if (processId == 0)gettimeofday(tval_before, NULL);
+           // granularOMP(imagen_src,image_dst,capas,hilos);
+            if (processId == 0)gettimeofday(tval_after, NULL);
+            if (processId == 0)timersub(tval_after, tval_before, tval_result);
+            if (processId == 0)printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            MPI_Barrier( MPI_COMM_WORLD );
             break;
     
         default:
             break;
     }
+
+
+    MPI_Barrier( MPI_COMM_WORLD );
+    MPI_Gather( ansBuffer, image_dstPartialSize, MPI_UNSIGNED_CHAR, image_dst.data, image_dstPartialSize, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD );
+    
+    if(processId == 0){
+        imwrite(nombre_dst,image_dst);
+        free(nombre_dst);
+        
+    }
+    
+    delete[]partialBuffer;
+
     MPI_Finalize();
     //Guardamos la imagen
-    imwrite(nombre_dst,image_dst);
-    free(nombre_dst);
+    
     return 0;
 }
