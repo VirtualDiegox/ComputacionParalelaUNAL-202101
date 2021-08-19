@@ -255,5 +255,5 @@ int main(int argc, char *argv[]) {
     //Guardamos la imagen
     imwrite(nombre_dst,image_dst);
     free(nombre_dst);
-    return 1;
+    return 0;
 }
