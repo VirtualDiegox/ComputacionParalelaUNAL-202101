@@ -1,5 +1,5 @@
-#include <opencv4/opencv.hpp>
-#include <opencv4/imgcodecs.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <iostream>
 #include <stdlib.h>
 #include <sys/time.h>
