@@ -178,9 +178,7 @@ int main(int argc, char *argv[]) {
     tval_after = (struct timeval*)malloc(sizeof(struct timeval));
     tval_result = (struct timeval*)malloc(sizeof(struct timeval));
 
-    //Creamos las variables de pthread de acuerdo a los arg
-    pthread_t threads[hilos];
-    struct filter_data td[hilos];
+    
     
     //Leemos la imagen
     Mat imagen_src = imread(nombre_src);
@@ -201,29 +199,6 @@ int main(int argc, char *argv[]) {
     switch (parametro_filtro){
         //filtro grisPromedio
         case 1:
-            gettimeofday(tval_before, NULL);
-            for(int i = 0; i < hilos; i++){
-                //segun la cantidad de hilos dividimos las iteraciones por block-wise y se las pasamos a una estructura para pasar la info al hilo
-                td[i].inicio = (int)(height/hilos)*i;
-                td[i].fin = ((int)(height/hilos)*(i+1))-1;
-                if (i==(hilos-1)) {
-                    td[i].fin = height-1;
-                }
-                td[i].Ptr_src = imagen_src;
-                td[i].Ptr_dst = image_dst;
-                td[i].capas = 0;
-                rc = pthread_create(&threads[i], NULL, grisPromedio, (void *)&td[i]);
-                if (rc) {
-                    cout << "Error:unable to create thread," << rc << endl;
-                    exit(-1);
-                }
-            }
-            for(int i = 0; i < hilos; i++){
-                pthread_join( threads[i], NULL);
-            }
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("POSIX: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
             
             //OMP
             
@@ -239,29 +214,7 @@ int main(int argc, char *argv[]) {
             break;
         //filtro Luma
         case 2:
-            gettimeofday(tval_before, NULL);
-            for(int i = 0; i < hilos; i++){
-                //segun la cantidad de hilos dividimos las iteraciones por block-wise y se las pasamos a una estructura para pasar la info al hilo
-                td[i].inicio = (int)(height/hilos)*i;
-                td[i].fin = ((int)(height/hilos)*(i+1))-1;
-                if (i==(hilos-1)) {
-                    td[i].fin = height-1;
-                }
-                td[i].Ptr_src = imagen_src;
-                td[i].Ptr_dst = image_dst;
-                td[i].capas = 0;
-                rc = pthread_create(&threads[i], NULL, grisLuma, (void *)&td[i]);
-                if (rc) {
-                    cout << "Error:unable to create thread," << rc << endl;
-                    exit(-1);
-                }
-            }
-            for(int i = 0; i < hilos; i++){
-                pthread_join( threads[i], NULL);
-            }
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("POSIX: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            
             //OMP
             
             gettimeofday(tval_before, NULL);
@@ -274,29 +227,6 @@ int main(int argc, char *argv[]) {
         //filtro sombrasDeGris
         case 3:
         
-            gettimeofday(tval_before, NULL);
-            for(int i = 0; i < hilos; i++){
-                //segun la cantidad de hilos dividimos las iteraciones por block-wise y se las pasamos a una estructura para pasar la info al hilo
-                td[i].inicio = (int)(height/hilos)*i;
-                td[i].fin = ((int)(height/hilos)*(i+1))-1;
-                if (i==(hilos-1)) {
-                    td[i].fin = height-1;
-                }
-                td[i].Ptr_src = imagen_src;
-                td[i].Ptr_dst = image_dst;
-                td[i].capas = capas;
-                rc = pthread_create(&threads[i], NULL, sombrasDeGris, (void *)&td[i]);
-                if (rc) {
-                    cout << "Error:unable to create thread," << rc << endl;
-                    exit(-1);
-                }
-            }
-            for(int i = 0; i < hilos; i++){
-                pthread_join( threads[i], NULL);
-            }
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("POSIX: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
             //OMP
             
             gettimeofday(tval_before, NULL);
@@ -308,29 +238,6 @@ int main(int argc, char *argv[]) {
             break;
         //filtro granular
         case 4:
-            gettimeofday(tval_before, NULL);
-            for(int i = 0; i < hilos; i++){
-                //segun la cantidad de hilos dividimos las iteraciones por block-wise y se las pasamos a una estructura para pasar la info al hilo
-                td[i].inicio = (int)(height/hilos)*i;
-                td[i].fin = ((int)(height/hilos)*(i+1))-1;
-                if (i==(hilos-1)) {
-                    td[i].fin = height-1;
-                }
-                td[i].Ptr_src = imagen_src;
-                td[i].Ptr_dst = image_dst;
-                td[i].capas = capas;
-                rc = pthread_create(&threads[i], NULL, granular, (void *)&td[i]);
-                if (rc) {
-                    cout << "Error:unable to create thread," << rc << endl;
-                    exit(-1);
-                }
-            }
-            for(int i = 0; i < hilos; i++){
-                pthread_join( threads[i], NULL);
-            } 
-            gettimeofday(tval_after, NULL);
-            timersub(tval_after, tval_before, tval_result);
-            printf("POSIX: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
             
             //OMP
             
