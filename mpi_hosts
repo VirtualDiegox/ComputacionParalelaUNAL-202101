@@ -1,0 +1,9 @@
+# The Hostfile for Open MPI
+# The master node, 'slots=2' is used because i
+t is a dual-processor machine.
+localhost slots=2
+# The following slave nodes are single process
+or machines:
+10.128.0.3 slots=1
+#10.128.0.4 slots=1
+#10.128.0.5 slots=1

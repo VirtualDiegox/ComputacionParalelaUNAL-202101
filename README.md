@@ -22,7 +22,7 @@ nvcc image-effects.cu -o filtros `pkg-config --cflags --libs opencv4`
 Si tiene una instalacion diferente de opencv basta con cambiar "opencv4" por "opencv" o "opencv2" en los include.
 
 Comando para correr efectos:
-```python
+```bash
 ./filtros [nombre_src] [nombre_dst] [filtro] [parametros de filtro] [num_hilos]
 ```
 * nombre_src: ubicacion y nombre de la imagen fuente
@@ -66,7 +66,7 @@ Comando para compilar:
 nvcc image-effects.cu -o filtros `pkg-config --cflags --libs opencv4`
 ```
 Comando para correr efectos:
-```python
+```bash
 ./filtros [nombre_src] [nombre_dst] [filtro] [parametros de filtro] [num_hilos] [num_bloques]
 ```
 * nombre_src: ubicacion y nombre de la imagen fuente
@@ -88,5 +88,48 @@ Primero se debe compilar el programa nvcc como fue especificado para que el scri
 
 ```bash
 chmod +x scrip_cuda.py
+./scrip_cuda.py
+```
+
+## Filtros B/N con MPI y OMP
+
+Se implementan 3 filtros de escala de grises para 3 tamanos de imagen utilizando MPI y OMP
+
+### Librerias Necesarias
+
+* MPI
+* OpenCV
+
+### Ejecucion
+
+Comando para compilar:
+```bash
+sudo mpic++ image-effects-mpi.cpp -o filtros_mpi -fopenmp `pkg-config --cflags --libs opencv4`
+```
+
+Comando para correr efectos:
+```bash
+mpirun -np [num_nodes] --hostfile mpi_hosts ./filtros_mpi [nombre_src] [nombre_dst] [filtro] [parametros de filtro] [num_hilos]
+```
+* num_nodes: cantidad de procesadores a usar
+* nombre_src: ubicacion y nombre de la imagen fuente
+* nombre_dst: ubicacion y nombre de la imagen destino
+* filtro: 1-4 que filtro se quiere aplicar:
+    * 1 gris promedio
+    * 2 luma 
+    * 3 capas 
+    * 4 granular
+* parametros de filtro: si el filtro lo requiere se pasan la cantidad de capas a utilizar, en caso filtro 1 o 2 omitir este parametro
+* num_hilos: se utilizara la cantidad de hilos especificados
+
+
+
+Comando para correr script de python:
+Permite verificar la funcionalidad completa del programa
+y guarda los datos en un csv indicado.
+Primero se debe compilar el programa nvcc como fue especificado para que el script funcione correctamente.
+
+```bash
+chmod +x script_mpi.py
 ./scrip_cuda.py
 ```
