@@ -1,5 +1,5 @@
 //sudo mpic++ image-effects-mpi.cpp -o filtros_mpi -fopenmp `pkg-config --cflags --libs opencv4`
-//sudo mpirun --allow-run-as-root -np 1 --host 10.128.0.3 ./filtros_mpi 4K.jpg 4K_withfilter1.jpg 1 2
+//mpirun -np 1 --host 10.128.0.3 ./filtros_mpi 4K.jpg 4K_withfilter1.jpg 1 2
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <iostream>
