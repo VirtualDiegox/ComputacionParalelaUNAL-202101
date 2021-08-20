@@ -310,9 +310,9 @@ int main(int argc, char *argv[])
     
     //declaramos argumentos de entradas
     char *nombre_src;
-    nombre_src = (char *)malloc(sizeof(char) * 20);
+    nombre_src = (char *)malloc(sizeof(char) * 40);
     char *nombre_dst;
-    nombre_dst = (char *)malloc(sizeof(char) * 20);
+    nombre_dst = (char *)malloc(sizeof(char) * 40);
     int parametro_filtro, capas, hilos, bloques;
     //tomando argumentos por consola
     strcpy(nombre_src, argv[1]);
