@@ -36,14 +36,14 @@ Comando para correr efectos:
 * num_hilos: si es 1 se corre secuencialmente, en caso contrario se utilizara la cantidad de hilos especificados
 
 Ejemplo: 
-```python
+```bash
 ./filtros 4K.jpg 4K_withfilter4.jpg 4 3 16
 ```
 
 Comando para correr script de python:
-Permite verificar la funcionalidad completa del programa\n
-y guarda los datos en un csv indicado
-Primero se debe compilar el programa c++ como fue especificado para que el script funcione correctamente
+Permite verificar la funcionalidad completa del programa
+y guarda los datos en un csv indicado.
+Primero se debe compilar el programa c++ como fue especificado para que el script funcione correctamente.
 
 ```bash
 chmod +x script_ejecutar_todo.py
@@ -82,9 +82,9 @@ Comando para correr efectos:
 
 
 Comando para correr script de python:
-Permite verificar la funcionalidad completa del programa\n
-y guarda los datos en un csv indicado
-Primero se debe compilar el programa nvcc como fue especificado para que el script funcione correctamente
+Permite verificar la funcionalidad completa del programa
+y guarda los datos en un csv indicado.
+Primero se debe compilar el programa nvcc como fue especificado para que el script funcione correctamente.
 
 ```bash
 chmod +x scrip_cuda.py
