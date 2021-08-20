@@ -28,9 +28,9 @@ for imagen in imagenes:
     for hilos in num_hilos:
         for filtro in filtros:
             if filtro == 1 or filtro == 2:
-                command = "./filtros " + imagen + extension + " " +imagen+"_withfilter"+ str(filtro) +extension + " " +str(filtro) +" "+ str(hilos)
+                command = "./filtros " + "images/" + imagen + extension + " " + "images_withfilter/" + imagen + "_withfilter"+ str(filtro) +extension + " " +str(filtro) +" "+ str(hilos)
             else:
-                command = "./filtros " + imagen + extension + " " +imagen+"_withfilter"+ str(filtro) +extension + " " + str(filtro)+" "+ str(capas) +" "+ str(hilos)
+                command = "./filtros " + "images/" + imagen + extension + " " + "images_withfilter/" + imagen + "_withfilter"+ str(filtro) +extension + " " + str(filtro)+" "+ str(capas) +" "+ str(hilos)
 
             for n in range(0,5):
                 output = subprocess.Popen(command,shell=True,stdout=subprocess.PIPE)

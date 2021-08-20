@@ -1,12 +1,22 @@
 # Practicas Computacion Paralela 2021-1
 
-Hecho por dbayonac y gaperezsa
+Hecho por:
+* Diego Alejandro Bayona - dbayonac 
+* Gabriel Perez Santamaria - gaperezsa
 
-## Practica 1: Filtros B/N con POSIX
+## Filtros B/N con POSIX, OMP y secuenciales
+
+Se implementan 4 filtros de escala de grises para 3 tamanos de imagen
+
+### Librerias Necesarias
+
+* OpenCV
+* lpthread
+
 
 Comando para compilar:
 ```bash
-g++ image-effects.cpp -o filtros -lpthread `pkg-config --cflags --libs opencv4`
+g++ image-effects.cpp -o filtros -lpthread -fopenmp `pkg-config --cflags --libs opencv4`
 ```
 Si tiene una instalacion diferente de opencv basta con cambiar "opencv4" por "opencv" o "opencv2" en los include.
 

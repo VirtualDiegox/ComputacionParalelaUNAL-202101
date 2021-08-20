@@ -1,5 +1,5 @@
-#include <opencv4/opencv.hpp>
-#include <opencv4/imgcodecs.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <iostream>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -335,7 +335,7 @@ void *granular(void *threadarg){
     uint8_t* pixelPtr_src = (uint8_t*)Ptr_src.data; //Puntero imagen original
     uint8_t* pixelPtr_dst = (uint8_t*)Ptr_dst.data; //Puntero imagen destino
     int cn = Ptr_src.channels();//Numero de canales
-    cout << sizeof(pixelPtr_dst) << endl;
+    
 	uint8_t pixel[cn]; 
 	long errorValue = 0;
 
@@ -476,9 +476,9 @@ void granularOMP(Mat Ptr_src,Mat Ptr_dst,int capas, int threads){
 int main(int argc, char *argv[]) {
     //declaramos argumentos de entradas
     char* nombre_src;
-    nombre_src = (char*)malloc(sizeof(char)*20);
+    nombre_src = (char*)malloc(sizeof(char)*40);
     char* nombre_dst;
-    nombre_dst = (char*)malloc(sizeof(char)*20);
+    nombre_dst = (char*)malloc(sizeof(char)*40);
     int parametro_filtro,capas,hilos;   
     //tomando argumentos por consola
     strcpy(nombre_src,argv[1]);
