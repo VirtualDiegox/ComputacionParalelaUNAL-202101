@@ -18,8 +18,8 @@ times_omp = []
 intentos_posix = []
 intentos_omp = []
 
-csv_posix = open("data_posix.csv", "w")
-csv_omp = open("data_omp.csv", "w")
+csv_posix = open("datacsv/data_posix.csv", "w")
+csv_omp = open("datacsv/data_omp.csv", "w")
 
 writer_posix = csv.writer(csv_posix)
 writer_omp = csv.writer(csv_omp)

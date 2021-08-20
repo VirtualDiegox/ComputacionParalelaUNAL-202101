@@ -1,8 +1,8 @@
-#Practicas Computacion Paralela 2021-1
+# Practicas Computacion Paralela 2021-1
 
 Hecho por dbayonac y gaperezsa
 
-##Practica 1: Filtros B/N con POSIX
+## Practica 1: Filtros B/N con POSIX
 
 Comando para compilar:
 ```bash
@@ -26,7 +26,8 @@ ejemplo:
 ```
 
 Comando para correr script de python:
-Permite verificar la funcionalidad completa del programa
+Permite verificar la funcionalidad completa del programa\n
+y guarda los datos en un csv indicado
 Primero se debe compilar el programa c++ como fue especificado para que el script funcione correctamente
 
 ```bash
