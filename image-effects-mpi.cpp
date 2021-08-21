@@ -8,18 +8,17 @@
 #include <stdio.h>
 #include <string>
 #include <pthread.h>
-#include <omp.h>
 #include <mpi.h>
  
 using namespace std;
 using namespace cv;
 
-void grisPromedioOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int imagePartialSize){
+void grisPromedioOMP(uchar* partialBuffer,uchar* ansBuffer,int imagePartialSize){
 
     uint8_t* pixelPtr_src = (uint8_t*)partialBuffer; //Puntero imagen original
     
-    omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(threads)
+    
+    
 	for(int i = 0; i < imagePartialSize; i+=3){
 	    
             uint8_t pixel[3];
@@ -36,12 +35,11 @@ void grisPromedioOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int imag
     } 
 }
 
-void grisLumaOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int imagePartialSize){
+void grisLumaOMP(uchar* partialBuffer,uchar* ansBuffer,int imagePartialSize){
     
     uint8_t* pixelPtr_src = (uint8_t*)partialBuffer; //Puntero imagen original
    
-    omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(threads)
+    
 	for(int i = 0; i <= imagePartialSize; i+=3){
         
             uint8_t pixel[3]; 
@@ -57,7 +55,7 @@ void grisLumaOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int imagePar
     }
 }
 
-void sombrasDeGrisOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int imagePartialSize,int capas){
+void sombrasDeGrisOMP(uchar* partialBuffer,uchar* ansBuffer,int imagePartialSize,int capas){
     
     if(capas<2) capas = 2;
     if(capas>255) capas = 255;
@@ -69,8 +67,7 @@ void sombrasDeGrisOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int ima
     
 	 
 	
-    omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(threads)
+    
 	for(int i = 0; i < imagePartialSize; i+=3){
         
             uint8_t pixel[3];
@@ -89,51 +86,6 @@ void sombrasDeGrisOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int ima
     }
 }
 
-void granularOMP(uchar* partialBuffer, int threads,uchar* ansBuffer,int imagePartialSize,int capas){
-    if(capas<2) capas = 2;
-    if(capas>255) capas = 255;
-
-    int ConversionFactor = 255 / (capas - 1);
-    
-    
-    uint8_t* pixelPtr_src = (uint8_t*)partialBuffer; //Puntero imagen original
-
-
-    omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(threads)
-	for(int i = 0; i < imagePartialSize; i+=3){
-        long errorValue = 0;
-        
-            uint8_t pixel[3];
-            //obtenemos valores RGB de la imagen
-            pixel[0] = (uint8_t)pixelPtr_src[i]; // B
-            pixel[1] = (uint8_t)pixelPtr_src[i+1]; // G
-            pixel[2] = (uint8_t)pixelPtr_src[i+2]; // R
-
-            //hacemos la logica del filtro con los valores RGB
-            uint8_t grey = (pixel[0]+pixel[1]+pixel[2])/3;
-            
-            long greyTempCalc = grey;
-            greyTempCalc += errorValue;
-            greyTempCalc = (int)((greyTempCalc / ConversionFactor) + 0.5) * ConversionFactor;
-
-            errorValue = grey + errorValue - greyTempCalc;
-            if(greyTempCalc<0){
-                grey = 0;
-            }else if (greyTempCalc>255){
-                grey = 255;
-            }else{
-                grey = greyTempCalc;
-            }
-             
-            
-            //asignamos el valor calculado al unico canal de la imagen a crear
-            ansBuffer[i/3] = (uchar)grey;
-        
-        errorValue = 0;
-    }
-}
-
 
 int main(int argc, char *argv[]) {
     //declaramos argumentos de entradas
@@ -148,11 +100,8 @@ int main(int argc, char *argv[]) {
     strcpy(nombre_src,argv[1]);
     strcpy(nombre_dst,argv[2]);
     parametro_filtro = stoi(argv[3]);
-    if(parametro_filtro==3 || parametro_filtro==4){
+    if(parametro_filtro==3){
         capas = stoi(argv[4]);
-        hilos = stoi(argv[5]);
-    }else{
-        hilos = stoi(argv[4]);
     }
 
     Mat imagen_src;
@@ -216,42 +165,33 @@ int main(int argc, char *argv[]) {
         case 1:
             //OMP
             if (processId == 0) gettimeofday(tval_before, NULL);
-            grisPromedioOMP(partialBuffer,hilos,ansBuffer,imagePartialSize);
+            grisPromedioOMP(partialBuffer,ansBuffer,imagePartialSize);
             if (processId == 0) gettimeofday(tval_after, NULL);
             if (processId == 0)timersub(tval_after, tval_before, tval_result);
-            if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            if (processId == 0) printf("MPI: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
             MPI_Barrier( MPI_COMM_WORLD );
             break;
         //filtro Luma
         case 2:
             //OMP
             if (processId == 0)gettimeofday(tval_before, NULL);
-            grisLumaOMP(partialBuffer,hilos,ansBuffer,imagePartialSize);
+            grisLumaOMP(partialBuffer,ansBuffer,imagePartialSize);
             if (processId == 0) gettimeofday(tval_after, NULL);
             if (processId == 0)timersub(tval_after, tval_before, tval_result);
-            if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            if (processId == 0) printf("MPI: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
             MPI_Barrier( MPI_COMM_WORLD );
             break;
         //filtro sombrasDeGris
         case 3:
             //OMP
             if (processId == 0)gettimeofday(tval_before, NULL);
-            sombrasDeGrisOMP(partialBuffer,hilos,ansBuffer,imagePartialSize,capas);
+            sombrasDeGrisOMP(partialBuffer,ansBuffer,imagePartialSize,capas);
             if (processId == 0) gettimeofday(tval_after, NULL);
             if (processId == 0)timersub(tval_after, tval_before, tval_result);
-            if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            if (processId == 0) printf("MPI: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
             MPI_Barrier( MPI_COMM_WORLD );
             break;
-        //filtro granular
-        case 4:           
-            //OMP 
-            if (processId == 0)gettimeofday(tval_before, NULL);
-            granularOMP(partialBuffer,hilos,ansBuffer,imagePartialSize,capas);
-            if (processId == 0) gettimeofday(tval_after, NULL);
-            if (processId == 0)timersub(tval_after, tval_before, tval_result);
-            if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
-            MPI_Barrier( MPI_COMM_WORLD );
-            break;
+        
     
         default:
             break;
