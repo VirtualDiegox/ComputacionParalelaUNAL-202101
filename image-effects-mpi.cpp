@@ -217,40 +217,40 @@ int main(int argc, char *argv[]) {
             //OMP
             if (processId == 0) gettimeofday(tval_before, NULL);
             grisPromedioOMP(partialBuffer,hilos,ansBuffer,imagePartialSize);
-            MPI_Barrier( MPI_COMM_WORLD );
             if (processId == 0) gettimeofday(tval_after, NULL);
             if (processId == 0)timersub(tval_after, tval_before, tval_result);
             if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            MPI_Barrier( MPI_COMM_WORLD );
             break;
         //filtro Luma
         case 2:
             //OMP
             if (processId == 0)gettimeofday(tval_before, NULL);
             grisLumaOMP(partialBuffer,hilos,ansBuffer,imagePartialSize);
-            MPI_Barrier( MPI_COMM_WORLD );
             if (processId == 0) gettimeofday(tval_after, NULL);
             if (processId == 0)timersub(tval_after, tval_before, tval_result);
             if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            MPI_Barrier( MPI_COMM_WORLD );
             break;
         //filtro sombrasDeGris
         case 3:
             //OMP
             if (processId == 0)gettimeofday(tval_before, NULL);
             sombrasDeGrisOMP(partialBuffer,hilos,ansBuffer,imagePartialSize,capas);
-            MPI_Barrier( MPI_COMM_WORLD );
             if (processId == 0) gettimeofday(tval_after, NULL);
             if (processId == 0)timersub(tval_after, tval_before, tval_result);
             if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            MPI_Barrier( MPI_COMM_WORLD );
             break;
         //filtro granular
         case 4:           
             //OMP 
             if (processId == 0)gettimeofday(tval_before, NULL);
             granularOMP(partialBuffer,hilos,ansBuffer,imagePartialSize,capas);
-            MPI_Barrier( MPI_COMM_WORLD );
             if (processId == 0) gettimeofday(tval_after, NULL);
             if (processId == 0)timersub(tval_after, tval_before, tval_result);
             if (processId == 0) printf("OMP: %ld.%06ld\n", (long int)tval_result->tv_sec, (long int)tval_result->tv_usec);
+            MPI_Barrier( MPI_COMM_WORLD );
             break;
     
         default:
