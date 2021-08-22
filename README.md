@@ -17,7 +17,7 @@ Se implementan 4 filtros de escala de grises para 3 tamanos de imagen
 
 Comando para compilar:
 ```bash
-nvcc image-effects.cu -o filtros `pkg-config --cflags --libs opencv4`
+g++ image-effects.cpp -o filtros -lpthread -fopenmp `pkg-config --cflags --libs opencv4`
 ```
 Si tiene una instalacion diferente de opencv basta con cambiar "opencv4" por "opencv" o "opencv2" en los include.
 
@@ -131,5 +131,5 @@ Primero se debe compilar el programa nvcc como fue especificado para que el scri
 
 ```bash
 chmod +x script_mpi.py
-./scrip_cuda.py
+./script_mpi.py
 ```
